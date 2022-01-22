@@ -79,3 +79,6 @@ class PlotMetadata():
         offset = np.arccos(a + b)*180/pi # In degrees
 
         return offset
+
+    def set_channels(self, channels):
+        self.channels = channels

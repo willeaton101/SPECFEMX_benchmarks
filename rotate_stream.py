@@ -54,7 +54,10 @@ def rotate_stream_data(stream, method, meta):
             old_chls = ["N", "E"]
             new_chls = ["T", "P"]
             for i in range(2):
+                if new_chls[i] == "P":
+                    data_TP[i, :] = data_TP[i,:]*(-1)
                 stream.select(station=stn, channel=old_chls[i])[0].data = data_TP[i,:]
+
                 stream.select(station=stn, channel=old_chls[i])[0].stats.channel = new_chls[i]
         else:
             raise ValueError("Currently method must be NE->TP")
