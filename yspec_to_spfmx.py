@@ -63,7 +63,7 @@ def process_raw_yspec(channels, master_dir, rename_raw=True, raw_folder="/raw/",
 
 if __name__ == "__main__":
     process_raw_yspec(channels="ZTPG",
-                  master_dir="/Users/eaton/Documents/Princeton/SPECFEMX_work/benchmark/HM_test_data/test1/equator_test/yspec/full_modes/",
+                  master_dir="./test1/self_gravitation/yspec",
                   rename_raw=True,
                   raw_folder="/raw/",
                   new_folder="/conv/",
