@@ -1,0 +1,9 @@
+./database/prem_iso_onecrust_noocean/poly/fixed_model.txt
+./database/prem_iso_onecrust_noocean/poly/T_isopremonecrust_nooc40_5000s_pol.bin
+./database/prem_iso_onecrust_noocean/poly/R_isopremonecrust_nooc40_5000s_pol.bin
+./database/prem_iso_onecrust_noocean/poly/S_isopremonecrust_nooc40_5000s_pol.bin
+./database/prem_iso_onecrust_noocean/CMTSOLUTION
+./input/STATIONS_18
+40.0
+0.2394 18000
+
