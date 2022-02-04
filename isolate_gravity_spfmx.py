@@ -1,4 +1,10 @@
-# Script to isolate gravity from the no_gravitation and cowling/self-gravitation simulations:
+# _______________________________________________________________________________________________________________________
+# Author:       W Eaton, Princeton Uni. 2022
+# Contact:      weaton@princeton.edu
+# Last edit:    4th Feb 2022
+# Notes:
+#   Script to isolate gravity from the no_gravitation and cowling/self-gravitation simulations:
+# ______________________________________________________________________________________________________________________
 import numpy as np
 from create_stn_list import gen_stn_list
 

@@ -1,5 +1,12 @@
-# Hom Naths SPFMX data comes in the form RTZ but everything else I produce uses TPZ
-# So need to rename this:
+# _______________________________________________________________________________________________________________________
+# Author:       W Eaton, Princeton Uni. 2022
+# Contact:      weaton@princeton.edu
+# Last edit:    4th Feb 2022
+# Notes:
+#   Hom Naths SPFMX data comes in the form RTZ but everything else I produce uses TPZ
+# ______________________________________________________________________________________________________________________
+
+
 import os
 from copy import copy
 

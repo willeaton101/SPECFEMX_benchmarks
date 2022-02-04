@@ -46,7 +46,7 @@ def process_raw_yspec(channels, master_dir, rename_raw=True, raw_folder="/raw/",
 
         if "yspec" in file:
             # Load data
-            data = np.loadtxt(raw_dir+file)
+            data = np.loadtxt(raw_dir+file, usecols=(0,1,2,3))
             time = data[:,0]
 
             # Loop through each channel
@@ -62,8 +62,8 @@ def process_raw_yspec(channels, master_dir, rename_raw=True, raw_folder="/raw/",
 
 
 if __name__ == "__main__":
-    process_raw_yspec(channels="ZTPG",
-                  master_dir="./test1/self_gravitation/yspec",
+    process_raw_yspec(channels="ZTP",
+                  master_dir="./test1/no_gravitation/yspec/",
                   rename_raw=True,
                   raw_folder="/raw/",
                   new_folder="/conv/",

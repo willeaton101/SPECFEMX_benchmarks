@@ -10,9 +10,12 @@ import numpy as np
 class PlotMetadata():
 
     def __init__(self, chls, out_chls, rotate, geoco, fmin, fmax, ev_coords,colours, tmax, tmin=0, no_stns=17,
-                 t_offset_spfmx=0, t_offset_nmsyn=0, t_offset_yspec=0):
+                 t_offset_spfmx=0, t_offset_nmsyn=0, t_offset_axisem=0, t_offset_yspec=0, gravity_subtract=False):
         # Simulation types:
-        self.types = ["axisem", "yspec", "spfmx", "nmsyn"]
+        self.types = ["axisem","yspec","nmsyn", "spfmx"]
+
+        # Gravity info:
+        self.gravity_subtract = gravity_subtract
 
         # Bandwidth info
         self.fmin = fmin
@@ -33,7 +36,8 @@ class PlotMetadata():
         self.tmax = tmax
         self.time_offset = {"spfmx": t_offset_spfmx,
                             "nmsyn": t_offset_nmsyn,
-                            "yspec": t_offset_yspec,}
+                            "yspec": t_offset_yspec,
+                            "axisem": t_offset_axisem}
 
         # Plots
         self.colours = colours
@@ -82,3 +86,6 @@ class PlotMetadata():
 
     def set_channels(self, channels):
         self.channels = channels
+
+    def set_gravsubtract(self, gs):
+        self.gravity_subtract = gs
