@@ -1,0 +1,2 @@
+Note that the inputs here are also used for the cowling approximation results. The ONLY difference is that in the
+mineos input files that get fed into minos bran, you need to change the wgrav from 30 mHz to 0mHz
