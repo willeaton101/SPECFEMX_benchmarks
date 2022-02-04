@@ -1,11 +1,10 @@
 # _______________________________________________________________________________________________________________________
 # Author:       W Eaton, Princeton Uni. 2022
 # Contact:      weaton@princeton.edu
-# Last edit:    1st Feb 2022
+# Last edit:    4th Feb 2022
 # Notes:
 #   Function to process Axisem data including renaming the files into a SPECFEMX-like style and then convolving
-# ______________________________________________________________________________________________________________________import os
-import numpy as np
+# ______________________________________________________________________________________________________________________
 from convolve_stf import gauss_STF_convolve
 import os
 import numpy as np

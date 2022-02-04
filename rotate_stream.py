@@ -3,7 +3,7 @@
 # Contact:      weaton@princeton.edu
 # Last edit:    20th Jan 2022
 # Notes:
-#   This is the script I use day-to-day for comparing results.
+#   Script for rotating a stream. This is the same as in ObsPy but I write it out for clarity
 # ______________________________________________________________________________________________________________________
 import numpy as np
 
