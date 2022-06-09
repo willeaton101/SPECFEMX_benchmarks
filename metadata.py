@@ -82,6 +82,9 @@ class PlotMetadata():
         b = np.sin(theta_stn) * np.sin(theta_src) * np.cos(phi_stn - phi_src)
         offset = np.arccos(a + b)*180/pi # In degrees
 
+        offset = stn_lat
+        print("WARNING USING STATION LAT AS OFFSET")
+
         return offset
 
     def set_channels(self, channels):

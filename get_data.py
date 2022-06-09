@@ -8,7 +8,7 @@
 import numpy as np
 import obspy
 
-def get_data(type, filepath, meta, measure="D", label=None, yspec=""):
+def get_data(type, filepath, meta, measure="D", label=None, yspec="", grav_yspec="", nograv_fp=""):
     # ==================================================================================================================
     # DESCRIPTION:
     # Load data from YSPEC, NMSYNG or SPECFEMX simulation and return to user as obspy stream
@@ -39,8 +39,19 @@ def get_data(type, filepath, meta, measure="D", label=None, yspec=""):
             else:
                 gravity=False
 
+            # Load the required data:
             data = np.loadtxt(get_loadstr(type, filepath, stn, measure, chl, gravity, yspec)) # format: [t, trace]
-            tr = _set_tr_stats(data[:,1], type=type, stn=stn, chl=chl, dt=data[1,0]-data[0,0], label=label)  # Set generic stats
+
+            # Subtract for gravity:
+            if meta.gravity_subtract==True:
+                # Load the non-gravity data:
+                nograv = np.loadtxt(get_loadstr(type, nograv_fp, stn, measure, chl, gravity, grav_yspec))
+                d = data[:,1] - nograv[:,1]
+
+            else:
+                d = data[:,1]
+
+            tr = _set_tr_stats(d, type=type, stn=stn, chl=chl, dt=data[1,0]-data[0,0], label=label)  # Set generic stats
 
             st += tr # Add trace to stream
     print(f"Loaded {type} data")
@@ -117,6 +128,7 @@ def get_loadstr(type, filepath, stn, measure, chl, gravity, yspec, network="Y5")
         nmsyn_chl = "GRV"
     else:
         spfmx_chl = f"MX{chl}{measure}"
+        #spfmx_chl = f"MX{chl}" #remove the D at the end
         nmsyn_chl = f"LH{chl}"
 
     # Generate load string:
@@ -138,7 +150,7 @@ def get_loadstr(type, filepath, stn, measure, chl, gravity, yspec, network="Y5")
 
     elif t == "AXISEM":
         # Example: Y5.X2.N.ascii
-        load_str = f"{filepath}/conv_{network}.{stn}.D{chl}.ascii"
+        load_str = f"{filepath}/conv_{network}.{stn}.ascii.D{chl}"
     else:
         raise ValueError("Must be spfmx/yspec/nmsyng...")
 
@@ -169,9 +181,12 @@ def process_stream(st_stream, meta):
 
         tr.stats.starttime = tr.stats.starttime - meta.time_offset[tr.stats.type]
 
+        if tr.stats.type == "spfmx":
+            if tr.stats.channel == "P":
+                tr.data = tr.data*(1)
 
-        if tr.stats.type != "spfmx":
-            # For NMSYNG/YSPEC, this cleans out any convolution artifacts at the beginning of the trace
+        if tr.stats.type != "spfmx" and tr.stats.type != "axisem":
+        # For NMSYNG/YSPEC, this cleans out any convolution artifacts at the beginning of the trace
             offset = meta.calc_offset(stn_lat=tr.stats.coordinates.latitude, stn_lon=tr.stats.coordinates.longitude)
 
             # This is some empirical offset vs time I estimated for where to cut at - feel free to edit.
@@ -180,6 +195,6 @@ def process_stream(st_stream, meta):
             nelems = int(slice_time/stream[i].stats.delta)
 
             # Comment out this line to remove effects:
-            stream[i].data[:nelems] = 0
+            #stream[i].data[:nelems] = 0
 
     return stream

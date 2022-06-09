@@ -8,11 +8,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+LW = 1.5    # Global linewidth
+
 def normalise(array):
     norm = array/np.amax(np.abs(array))
     return norm
 
-def plot_station(st, station, chls, meta):
+def plot_station(st, station, chls, meta, style='dark'):
     # ==================================================================================================================
     # DESCRIPTION:
     # Plots single station for multiple different simulation types (e.g. nmsyng, yspec)
@@ -25,7 +27,8 @@ def plot_station(st, station, chls, meta):
     #    Returns matplotlib figure for that station
     # ==================================================================================================================
     # Set dark mode:
-    plt.style.use('dark_background')
+    if style == 'dark':
+        plt.style.use('dark_background')
 
     n = len(chls)                                                               # number of channels to loop through
     fig, ax = plt.subplots(n, 1, figsize=(12, 7.5), sharex=True, sharey=True)   # create figure.
@@ -51,9 +54,12 @@ def plot_station(st, station, chls, meta):
 
                     c = meta.colours[tr.stats.label]
                     if n==1:
-                        line, = ax.plot(time, normalise(tr.data), '-', linewidth=1., color=c)
+                        line, = ax.plot(time, normalise(tr.data), '-', linewidth=LW, color=c)
                     else:
-                        line, = ax[k].plot(time, normalise(tr.data), '-', linewidth=1., color=c)
+                        if tr.stats.type=="spfmx":
+                            line, = ax[k].plot(time, normalise(tr.data), ':', linewidth=LW, color=c)
+                        else:
+                            line, = ax[k].plot(time, normalise(tr.data), '-', linewidth=LW, color=c)
 
                     leg_lines.append(line)
                     leg_string.append(str(tr.stats.label))
@@ -62,13 +68,16 @@ def plot_station(st, station, chls, meta):
         plt.suptitle(f"Station {station}: Latitude = {tr.stats.coordinates.latitude} ; Δ = {np.round(offset, 2)} degrees ; {meta.fmin_mHz}-{meta.fmax_mHz} mHz")
         title_str = f"Channel: {meta.chl_options[chls[k]]}"
         x_label   = "Time [s]"
-        y_label   = "Norm. displacement"
+        if tr.stats.channel == "G":
+            y_label   = "Norm. Gravitational potential perturbation"
+        else:
+            y_label   = "Norm. displacement"
 
         if n==1:
             ax.set_title(title_str)
             ax.legend(leg_lines, leg_string)
             ax.set_xlabel(x_label)
-            ax.set_ylim([-1, 1])
+            #ax.set_ylim([-1, 1])
             ax.set_xlim([meta.tmin, meta.tmax])
             ax.set_ylabel(y_label)
         else:
@@ -76,7 +85,7 @@ def plot_station(st, station, chls, meta):
             ax[k].set_xlim([meta.tmin, meta.tmax])
             ax[0].legend(leg_lines, leg_string)
             ax[-1].set_xlabel(x_label)
-            ax[k].set_ylim([-1, 1])
+            #ax[k].set_ylim([-1, 1])
             ax[k].set_ylabel(y_label)
 
     fig.set_tight_layout(True)
@@ -85,7 +94,7 @@ def plot_station(st, station, chls, meta):
 
 
 
-def plot_record(stream, meta, amplitude=10, orientation="HORIZONTAL"):
+def plot_record(stream, meta, amplitude=10, orientation="HORIZONTAL", style='dark'):
     # ==================================================================================================================
     # DESCRIPTION:
     # Plots record section multiple different simulation types (e.g. nmsyng, yspec)
@@ -97,7 +106,8 @@ def plot_record(stream, meta, amplitude=10, orientation="HORIZONTAL"):
     # OUTPUTS:
     #    Returns Matplotlib figure
     # ==================================================================================================================
-    plt.style.use('dark_background')
+    if style == 'dark':
+        plt.style.use('dark_background')
 
     # Counters/lists needed for flexible legend
     spfmx_leg_ctr = 0
@@ -108,7 +118,7 @@ def plot_record(stream, meta, amplitude=10, orientation="HORIZONTAL"):
     leg_names = []
     offsets = []
 
-    fig_record, ax_r = plt.subplots(figsize=(12,7))
+    fig_record, ax_r = plt.subplots(figsize=(9,7))
 
     for tr in stream:
         # Get type of simulation for data
@@ -126,7 +136,7 @@ def plot_record(stream, meta, amplitude=10, orientation="HORIZONTAL"):
         offsets.append(offset)
 
         # Sort out Legend colours
-        c = meta.colours[type]
+        c = meta.colours[tr.stats.label]
 
         # Prepare plotting based on orientation:
         if orientation.upper()=="VERTICAL":
@@ -138,16 +148,19 @@ def plot_record(stream, meta, amplitude=10, orientation="HORIZONTAL"):
 
         # loop required because of issues with Fig legend.
         if type == 'spfmx':
-            line_spfmx, = ax_r.plot(x, y, color=c, linewidth=0.7)
+            if tr.stats.label=='APRIL17':
+                line_spfmx, = ax_r.plot(x, y, ':', color=c, linewidth=LW)
+            else:
+                line_spfmx, = ax_r.plot(x, y, ':', color=c, linewidth=LW)
             spfmx_leg_ctr, leg_list, leg_names = _check_ctr(spfmx_leg_ctr, line_spfmx, "SPECFEM-X", leg_list, leg_names)
         elif type == 'yspec':
-            line_yspec, = ax_r.plot(x, y, color=c, linewidth=0.7)
+            line_yspec, = ax_r.plot(x, y, color=c, linewidth=LW)
             yspec_leg_ctr, leg_list, leg_names = _check_ctr(yspec_leg_ctr, line_yspec, "YSPEC", leg_list, leg_names)
         elif type == 'nmsyn':
-            line_nmsyn, = ax_r.plot(x, y, color=c, linewidth=0.7)
+            line_nmsyn, = ax_r.plot(x, y, color=c, linewidth=LW)
             nmsyng_leg_ctr, leg_list, leg_names = _check_ctr(nmsyng_leg_ctr, line_nmsyn, "NMSYNG", leg_list, leg_names)
         elif type == 'axisem':
-            line_axi, = ax_r.plot(x, y, color=c, linewidth=0.7)
+            line_axi, = ax_r.plot(x, y, color=c, linewidth=LW)
             axi_leg_ctr, leg_list, leg_names = _check_ctr(axi_leg_ctr, line_axi, "AXISEM", leg_list, leg_names)
 
     # Set figure metadetails
@@ -166,7 +179,8 @@ def plot_record(stream, meta, amplitude=10, orientation="HORIZONTAL"):
 
         y_low = np.amin(np.array(offsets)) - amplitude
         y_high = np.amax(np.array(offsets)) + amplitude
-        ylabel = "Distance, Δ [degrees]"
+        #ylabel = "Distance, Δ [degrees]"
+        ylabel = "Station Latitude [degrees]"
 
     fs = 12
     ax_r.set_xlabel(xlabel, fontsize=fs)
@@ -175,7 +189,7 @@ def plot_record(stream, meta, amplitude=10, orientation="HORIZONTAL"):
     ax_r.set_ylim([y_low, y_high])
 
     ax_r.set_title(f"Record Section: Channel {stream[0].stats.channel}")
-    ax_r.legend(leg_list, leg_names, loc="upper left")
+    #ax_r.legend(leg_list, leg_names, loc="upper left")
     fig_record.set_tight_layout(True)
 
     return fig_record
@@ -203,7 +217,7 @@ def _check_ctr(counter, line, name, leg_lines, leg_names):
 
 
 
-def plot_spectra(st, station, meta, chls=["Z", "T", "P"]):
+def plot_spectra(st, station, meta, chls=["Z", "T", "P"], style='dark'):
     # ==================================================================================================================
     # DESCRIPTION:
     # Plots single station for multiple different simulation types (e.g. nmsyng, yspec)
@@ -215,7 +229,8 @@ def plot_spectra(st, station, meta, chls=["Z", "T", "P"]):
     # OUTPUTS:
     #    Returns matplotlib figure
     # ==================================================================================================================
-    plt.style.use('dark_background')
+    if style=='dark':
+        plt.style.use('dark_background')
 
     st_stn = st.select(station=station)
     N = len(chls)
@@ -250,7 +265,7 @@ def plot_spectra(st, station, meta, chls=["Z", "T", "P"]):
                     label = tr.stats.label
                     c = meta.colours[label]
 
-                    line, = ax[k].plot(period, normalise(power), linewidth=1., color=c)
+                    line, = ax[k].plot(period, normalise(power), linewidth=LW, color=c)
                     leg_lines.append(line)
                     leg_string.append(str(type))
 
