@@ -57,7 +57,7 @@ def plot_station(st, station, chls, meta, style='dark'):
                         line, = ax.plot(time, normalise(tr.data), '-', linewidth=LW, color=c)
                     else:
                         if tr.stats.type=="spfmx":
-                            line, = ax[k].plot(time, normalise(tr.data), ':', linewidth=LW, color=c)
+                            line, = ax[k].plot(time, normalise(tr.data), '-', linewidth=LW, color=c)
                         else:
                             line, = ax[k].plot(time, normalise(tr.data), '-', linewidth=LW, color=c)
 

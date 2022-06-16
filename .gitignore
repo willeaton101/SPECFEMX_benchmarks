@@ -8,7 +8,9 @@ __pycache__/
 
 # Data files: 
 *.ascii
-
+./bolivia_data/*
+*.mseed
+*.BH*
 
 # Distribution / packaging
 .Python

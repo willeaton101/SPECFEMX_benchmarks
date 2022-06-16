@@ -9,7 +9,7 @@ import os
 import numpy as np
 from convolve_stf import gauss_STF_convolve
 
-master_dir = "./test1/self_gravitation/specfemx/NEX192_May26"
+master_dir = "./test2/self_gravitation/specfemx/"
 raw_dir = master_dir + "/raw/"
 conv_dir = master_dir + "/conv/"
 
