@@ -9,18 +9,27 @@ import os
 import numpy as np
 from convolve_stf import gauss_STF_convolve
 
-master_dir = "./test2/self_gravitation/specfemx/"
+master_dir = "./Tohoku_2011_benchmark/nmsyn"
 raw_dir = master_dir + "/raw/"
-conv_dir = master_dir + "/conv/"
+
+
+
+# Identifier in file name that indicates this is a file we want to convolve - e.g for synthetics may want to use 'X'
+id = 'nmsyn'       #IU
+half_duration = 70 # use 60 for benchmarks tests
+
+conv_dir = master_dir + f"/conv/"
+
+
 
 if os.path.exists(conv_dir) == False:
     os.mkdir(conv_dir)
 
 for file in os.listdir(raw_dir):
-    if "X" in file:
+    if id in file:
         input = np.loadtxt(raw_dir + file)
 
-        conv = gauss_STF_convolve(input[:,0], input[:,1], half_duration=60, alpha=1.628)
+        conv = gauss_STF_convolve(input[:,0], input[:,1], half_duration=half_duration, alpha=1.628)
 
         out_fname =  conv_dir+"conv_"+file
         np.savetxt(fname=out_fname, X=conv)

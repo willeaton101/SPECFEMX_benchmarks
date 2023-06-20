@@ -1,7 +1,7 @@
 # _______________________________________________________________________________________________________________________
 # Author:       W Eaton, Princeton Uni. 2022
 # Contact:      weaton@princeton.edu
-# Last edit:    20th Jan 2022
+# Last edit:    20th Jan 2022 (to function)
 # Notes:
 #   Function to process YSPEC data including renaming the files into a SPECFEMX-like style and then convolving
 # ______________________________________________________________________________________________________________________import os
@@ -10,7 +10,7 @@ from convolve_stf import gauss_STF_convolve
 import os
 import numpy as np
 
-def process_raw_yspec(channels, master_dir, rename_raw=True, raw_folder="/raw/", new_folder="/conv/", measure="D"):
+def process_raw_yspec(channels, master_dir, rename_raw=True, raw_folder="/raw/", new_folder="/conv/", measure="D", hdur=60, keyword=None):
 
     # Catch issue if channel string in wrong order
     if (channels[:3] != "ZNE") and (channels[:3] != "ZTP"):
@@ -24,7 +24,7 @@ def process_raw_yspec(channels, master_dir, rename_raw=True, raw_folder="/raw/",
         # Rename all of the raw files - this is sufficiently efficient because no data is loaded so I keep it in its own
         # loop for clarity
         for file in os.listdir(raw_dir):
-            if "yspec" in file:
+            if keyword in file:
 
                 result = file.find('.', -4)                 # Find index of . in yspec file name
                 stn_number = int(file[result+1:])           # Get station number (to right of dot)
@@ -44,16 +44,16 @@ def process_raw_yspec(channels, master_dir, rename_raw=True, raw_folder="/raw/",
 
     for file in os.listdir(raw_dir):
 
-        if "yspec" in file:
+        if keyword in file:
             # Load data
-            data = np.loadtxt(raw_dir+file, usecols=(0,1,2,3))
+            data = np.loadtxt(raw_dir+file, usecols=(0,1,2,3,4))
             time = data[:,0]
 
             # Loop through each channel
             for i in range(len(channels)):
                 trace = data[:, i+1]                                                        # Isolate channel data
 
-                convolved = gauss_STF_convolve(time=time, data=trace, half_duration=60)     # Convolve data
+                convolved = gauss_STF_convolve(time=time, data=trace, half_duration=hdur)     # Convolve data
 
                 out_fname = f"{conv_dir}/conv_{file}.{measure}{channels[i]}"                # Output file name
                 np.savetxt(fname=out_fname, X=convolved, delimiter="         ")             # Save file
@@ -62,9 +62,11 @@ def process_raw_yspec(channels, master_dir, rename_raw=True, raw_folder="/raw/",
 
 
 if __name__ == "__main__":
-    process_raw_yspec(channels="ZTP",
-                  master_dir="./test1/no_gravitation/yspec/",
+    process_raw_yspec(channels="ZNEG",
+                  master_dir="./debug_tohoku/initial_test1_copy/yspec/",
                   rename_raw=True,
                   raw_folder="/raw/",
                   new_folder="/conv/",
-                  measure="D")
+                  measure="D",
+                  hdur=60,
+                  keyword = 'PREMTEST')

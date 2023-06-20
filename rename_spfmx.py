@@ -3,33 +3,32 @@
 # Contact:      weaton@princeton.edu
 # Last edit:    4th Feb 2022
 # Notes:
-#   Hom Naths SPFMX data comes in the form RTZ but everything else I produce uses TPZ
+#   HNG SPFMX data comes in the form RTZ but everything else I produce uses TPZ
 # ______________________________________________________________________________________________________________________
 
 
 import os
 from copy import copy
 
-dir = "./test1/cowling/specfemx/raw/"
+dir = "./Tohoku_2011_benchmark/specfemx/raw/"
 
-
+id = "sem"
 
 for file in os.listdir(dir):
-    if "Y5" in file:
+    if id in file:
         # need to convert all of the trans --> phi before then doing radial --> theta
-        if "T" in file:
+        if "MXT" in file:
             new_file = copy(file)
-            new_file = new_file.replace("T", "P")
+            new_file = new_file.replace("MXT", "MXP")
             os.rename(f"{dir}/{file}", f"{dir}/{new_file}")
             print(f"{file} --> {new_file}")
 
 # Now do seperate loop for second radial --> theta to avoid conflics:
-
 for file in os.listdir(dir):
-    if "Y5" in file:
+    if id in file:
         # need to convert all of the trans --> phi before then doing radial --> theta
-        if "R" in file:
+        if "MXR" in file:
             new_file = copy(file)
-            new_file = new_file.replace("R", "T")
+            new_file = new_file.replace("MXR", "MXT")
             os.rename(f"{dir}/{file}", f"{dir}/{new_file}")
             print(f"{file} --> {new_file}")

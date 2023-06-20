@@ -2,21 +2,21 @@
 # program yspec -
 
 # prefix /Users/eaton/Documents/SPECFEMX_work/Benchmarking/YSPEC/bin/yspec.infor output files
-  selfgrav_tilt.yspec
+  PREMTEST1.yspec
 
 # Earth model - 1 layered in crust, ocean filled with crust, no attenuation
-  prem28.model 
+  PREM_test1.model
 
 # attenuation switch: 1 = on, 0 = off
 0
 
 # gravitation: 0 = none, 1 = cowling, 2 = self - THIS IS SWITCHED DEPENDING ON SIMULATION
-1 or 2
+2
 
 # output: 0 = displacement, 1 = velocity, 2 = acceleration
 0
 
-# potential and tilt corrections: 0 = no, 1 = yes - dont know about this
+# potential and tilt corrections: 0 = no, 1 = yes
 1
  
 # lmin 
@@ -31,7 +31,7 @@
 # fmax (mHz) -  
   30 
   
-#  length of  time series (min)
+#  length of time series (min)
   300
 
 # time step (sec) 

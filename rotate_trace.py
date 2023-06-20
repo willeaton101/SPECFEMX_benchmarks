@@ -2,7 +2,7 @@
 import numpy as np
 
 # Following the method used by JT in NMSYNG (DT98 eqn 10.3)
-def rotate_stream(stream,  method, src, stn, geoco=1):
+def rotate_stream(stream,  method, src, stn, geoco=1, overwrite_channel_names=False, invert_p=True, invert_t=True):
     # Get station coordinates:
     lat_stn = stn[0]
     lon_stn = stn[1]
@@ -46,11 +46,27 @@ def rotate_stream(stream,  method, src, stn, geoco=1):
         old_chls = ["N", "E"]
         new_chls = ["T", "P"]
         for i in range(2):
-            if new_chls[i] == "P":
+            if np.logical_and(new_chls[i] == "P", invert_p==True):
                 data_TP[i, :] = data_TP[i,:]*(-1)
-            stream.select(component=old_chls[i])[0].data = data_TP[i,:]
+            if np.logical_and(new_chls[i] == "T", invert_t==True):
+                data_TP[i, :] = data_TP[i,:]*(-1)
 
-            #stream.select(component=old_chls[i])[0].stats.channel = new_chls[i]
+            stream.select(component=old_chls[i])[0].data = data_TP[i,:]
+            if overwrite_channel_names:
+                old_chl_name = stream.select(component=old_chls[i])[0].stats.channel
+
+                if old_chl_name.find('E') != -1:
+                    # Channel has E in it:
+                    index = old_chl_name.find('E')
+                    new_name = old_chl_name[:index] + 'P' + old_chl_name[index+1:]
+
+                if old_chl_name.find('N') != -1:
+                    # Channel has N in it:
+                    index = old_chl_name.find('N')
+                    new_name = old_chl_name[:index] + 'T' + old_chl_name[index+1:]
+
+                stream.select(component=old_chls[i])[0].stats.channel = new_name
+
     else:
         raise ValueError("Currently method must be NE->TP")
 

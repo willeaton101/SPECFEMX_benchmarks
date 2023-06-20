@@ -39,19 +39,27 @@ def get_data(type, filepath, meta, measure="D", label=None, yspec="", grav_yspec
             else:
                 gravity=False
 
+
+            if meta.custom_networks:
+                network = meta.network_list[stn]
+            else:
+                network = meta.network
+
+
             # Load the required data:
-            data = np.loadtxt(get_loadstr(type, filepath, stn, measure, chl, gravity, yspec)) # format: [t, trace]
+            data = np.loadtxt(get_loadstr(type, filepath, stn, measure, chl, gravity, yspec, network=network)) # format: [t, trace]
 
             # Subtract for gravity:
             if meta.gravity_subtract==True:
                 # Load the non-gravity data:
-                nograv = np.loadtxt(get_loadstr(type, nograv_fp, stn, measure, chl, gravity, grav_yspec))
+                nograv = np.loadtxt(get_loadstr(type, nograv_fp, stn, measure, chl, gravity, grav_yspec, network=meta.network))
                 d = data[:,1] - nograv[:,1]
 
             else:
                 d = data[:,1]
 
-            tr = _set_tr_stats(d, type=type, stn=stn, chl=chl, dt=data[1,0]-data[0,0], label=label)  # Set generic stats
+            tr = _set_tr_stats(d, type=type, stn=stn, chl=chl, dt=data[1,0]-data[0,0], label=label,
+                               network=network, attach_coords=meta.attach_coords, meta=meta)
 
             st += tr # Add trace to stream
     print(f"Loaded {type} data")
@@ -60,7 +68,7 @@ def get_data(type, filepath, meta, measure="D", label=None, yspec="", grav_yspec
 
 
 
-def _set_tr_stats(data, type, stn, chl, dt, label):
+def _set_tr_stats(data, type, stn, chl, dt, label, network, meta, attach_coords=True):
     # ==================================================================================================================
     # DESCRIPTION:
     # Sets the metadata or 'stats' for the Obspy traces
@@ -78,7 +86,9 @@ def _set_tr_stats(data, type, stn, chl, dt, label):
     # Set data and simulation_metadata
     tr = obspy.Trace()
 
-    tr.stats.network = type
+
+    tr.stats.network = network
+
     tr.stats.station = stn
     tr.stats.channel = chl
     tr.stats.delta = dt
@@ -91,10 +101,20 @@ def _set_tr_stats(data, type, stn, chl, dt, label):
         tr.stats["label"] = label
 
 
-    ### THIS ONLY WORKS FOR THE CURRENT SETUP where X... for each station describes a specific latitude/longitude
     tr.stats["coordinates"] = {}  # add the coordinates to your dictionary,
-    tr.stats["coordinates"]["latitude"] = float(stn[1:]) - 91
-    tr.stats["coordinates"]["longitude"] = 0
+    tr.stats["coordinates"]["latitude"] = None
+    tr.stats["coordinates"]["longitude"] = None
+
+    if attach_coords == True:
+        if meta.Xstations:
+            tr.stats["coordinates"]["latitude"]  = float(stn[1:]) - 91
+            tr.stats["coordinates"]["longitude"] = 0.0
+        else:
+            tr.stats["coordinates"]["latitude"]  = float(meta.lat_list[stn])
+            tr.stats["coordinates"]["longitude"] = float(meta.lon_list[stn])
+
+
+
 
     ## Adding data:
     tr.data = data
@@ -122,14 +142,15 @@ def get_loadstr(type, filepath, stn, measure, chl, gravity, yspec, network="Y5")
     # ==================================================================================================================
 
 
+
     # Strings require alteration for gravity style data
     if gravity==True:
         spfmx_chl = "MXG"
         nmsyn_chl = "GRV"
     else:
-        spfmx_chl = f"MX{chl}{measure}"
-        #spfmx_chl = f"MX{chl}" #remove the D at the end
-        nmsyn_chl = f"LH{chl}"
+        #spfmx_chl = f"MX{chl}{measure}"
+        spfmx_chl = f"MX{chl}{measure}" #remove the D at the end
+        nmsyn_chl = f"LH{chl}{measure}"
 
     # Generate load string:
     # YOU MAY NEED TO EDIT THESE FOR YOUR DATA - e.g. removing the conv_
@@ -141,12 +162,16 @@ def get_loadstr(type, filepath, stn, measure, chl, gravity, yspec, network="Y5")
 
     elif t == "SPFMX":
         # Example: conv_X1.Y5.MXEV.sem.ascii
-        load_str = f"{filepath}/conv_{stn}.{network}.{spfmx_chl}.sem.ascii"
+        #load_str = f"{filepath}/conv_{network}.{stn}.{spfmx_chl}.sem.ascii"
+        if yspec==0:
+            load_str = f"{filepath}/conv_{network}.{stn}.{spfmx_chl}.sem.ascii"
+        else:
+            load_str = f"{filepath}/conv_{stn}.{network}.{spfmx_chl}.sem.ascii"
 
     elif t == "NMSYN":
         # Example: X21.Y5.LHE.nmsyn
         load_str = f"{filepath}/conv_{stn}.{network}.{nmsyn_chl}.nmsyn"
-        #oad_str = f"{filepath}/{stn}.{network}.{nmsyn_chl}.nmsyn"
+        #load_str = f"{filepath}/{stn}.{network}.{nmsyn_chl}.nmsyn"
 
     elif t == "AXISEM":
         # Example: Y5.X2.N.ascii
@@ -154,11 +179,12 @@ def get_loadstr(type, filepath, stn, measure, chl, gravity, yspec, network="Y5")
     else:
         raise ValueError("Must be spfmx/yspec/nmsyng...")
 
+    print('loading :', load_str)
 
     return load_str
 
 
-def process_stream(st_stream, meta):
+def process_stream(st_stream, meta, reverse_P=False, reverse_all=False, reverse_G=False, reverse_Z=False, reverse_T=False):
     # ==================================================================================================================
     # DESCRIPTION:
     # Filters and slices streams. Also sets early parts of some traces to 0 to remove convolution errors.
@@ -181,20 +207,15 @@ def process_stream(st_stream, meta):
 
         tr.stats.starttime = tr.stats.starttime - meta.time_offset[tr.stats.type]
 
-        if tr.stats.type == "spfmx":
-            if tr.stats.channel == "P":
-                tr.data = tr.data*(1)
 
-        if tr.stats.type != "spfmx" and tr.stats.type != "axisem":
-        # For NMSYNG/YSPEC, this cleans out any convolution artifacts at the beginning of the trace
-            offset = meta.calc_offset(stn_lat=tr.stats.coordinates.latitude, stn_lon=tr.stats.coordinates.longitude)
-
-            # This is some empirical offset vs time I estimated for where to cut at - feel free to edit.
-            slice_time = 2000/180*offset
-            # Takes first nelems and sets equal to 0
-            nelems = int(slice_time/stream[i].stats.delta)
-
-            # Comment out this line to remove effects:
-            #stream[i].data[:nelems] = 0
-
+        if np.logical_and(reverse_P, tr.stats.channel == "P"):
+            tr.data = tr.data*(-1)
+        if np.logical_and(reverse_T, tr.stats.channel == "T"):
+            tr.data = tr.data * (-1)
+        if np.logical_and(reverse_Z, tr.stats.channel == "Z"):
+            tr.data = tr.data*(-1)
+        if np.logical_and(reverse_G,  tr.stats.channel == "G"):
+            tr.data = tr.data*(-1)
+        if reverse_all:
+                tr.data = tr.data * (-1)
     return stream

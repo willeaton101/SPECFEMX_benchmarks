@@ -1,3 +1,20 @@
+*.pdf
+*DS_Store
+*.sem.ascii
+*.DZ
+*.DP
+*.idea*
+*.ai
+*.DT
+*.nmsyn
+*.X*
+*.yspec.*
+starttimeloop.txt
+timestamp*
+*.sac
+values_from_mesher.h
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

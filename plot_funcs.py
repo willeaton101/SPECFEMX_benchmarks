@@ -7,14 +7,16 @@
 # ______________________________________________________________________________________________________________________
 import matplotlib.pyplot as plt
 import numpy as np
+from wetools import *
 
-LW = 1.5    # Global linewidth
+LW = 0.8   # Global linewidth
 
 def normalise(array):
     norm = array/np.amax(np.abs(array))
     return norm
 
-def plot_station(st, station, chls, meta, style='dark'):
+
+def plot_station(st, station, chls, meta, style='dark', norm_amp=False):
     # ==================================================================================================================
     # DESCRIPTION:
     # Plots single station for multiple different simulation types (e.g. nmsyng, yspec)
@@ -31,7 +33,7 @@ def plot_station(st, station, chls, meta, style='dark'):
         plt.style.use('dark_background')
 
     n = len(chls)                                                               # number of channels to loop through
-    fig, ax = plt.subplots(n, 1, figsize=(12, 7.5), sharex=True, sharey=True)   # create figure.
+    fig, ax = plt.subplots(n, 1, figsize=(12, 7.5), sharex=True, sharey=False)   # create figure.
 
     # Loop through each channel:
     for k in range(n):
@@ -50,17 +52,26 @@ def plot_station(st, station, chls, meta, style='dark'):
                     # Adjust start time for specific traces:
                     time = time - meta.time_offset[tr.stats.type]
 
-                    offset = meta.calc_offset(stn_lat=tr.stats.coordinates.latitude, stn_lon=tr.stats.coordinates.longitude)
-
-                    c = meta.colours[tr.stats.label]
+                    # Get offset of station from src:
+                    offset = meta.calc_offset(stn_lat=tr.stats.coordinates.latitude,
+                                              stn_lon=tr.stats.coordinates.longitude)
+                    # Get axis for plotting:
                     if n==1:
-                        line, = ax.plot(time, normalise(tr.data), '-', linewidth=LW, color=c)
+                        axtmp = ax
                     else:
-                        if tr.stats.type=="spfmx":
-                            line, = ax[k].plot(time, normalise(tr.data), '-', linewidth=LW, color=c)
-                        else:
-                            line, = ax[k].plot(time, normalise(tr.data), '-', linewidth=LW, color=c)
+                        axtmp = ax[k]
 
+                    # Get line colour:
+                    c = meta.colours[tr.stats.label]
+
+                    # Amplitude:
+                    if norm_amp:
+                        dtmp = normalise(tr.data)
+                    else:
+                        dtmp = tr.data
+
+                    # Plot!
+                    line, = axtmp.plot(time, dtmp, '-', linewidth=LW, color=c)
                     leg_lines.append(line)
                     leg_string.append(str(tr.stats.label))
 
@@ -69,24 +80,20 @@ def plot_station(st, station, chls, meta, style='dark'):
         title_str = f"Channel: {meta.chl_options[chls[k]]}"
         x_label   = "Time [s]"
         if tr.stats.channel == "G":
-            y_label   = "Norm. Gravitational potential perturbation"
+            y_label   = "Gravitational potential perturbation"
         else:
-            y_label   = "Norm. displacement"
+            y_label   = "Displacement"
 
-        if n==1:
-            ax.set_title(title_str)
-            ax.legend(leg_lines, leg_string)
-            ax.set_xlabel(x_label)
-            #ax.set_ylim([-1, 1])
-            ax.set_xlim([meta.tmin, meta.tmax])
-            ax.set_ylabel(y_label)
-        else:
-            ax[k].set_title(title_str)
-            ax[k].set_xlim([meta.tmin, meta.tmax])
-            ax[0].legend(leg_lines, leg_string)
-            ax[-1].set_xlabel(x_label)
-            #ax[k].set_ylim([-1, 1])
-            ax[k].set_ylabel(y_label)
+        if norm_amp:
+            y_label = 'Normalised ' + y_label
+
+        # Bells and whistles:
+        axtmp.set_title(title_str)
+        axtmp.legend(leg_lines, leg_string)
+        axtmp.set_xlabel(x_label)
+        axtmp.set_xlim([meta.tmin, meta.tmax])
+        axtmp.set_ylabel(y_label)
+
 
     fig.set_tight_layout(True)
 
@@ -126,8 +133,8 @@ def plot_record(stream, meta, amplitude=10, orientation="HORIZONTAL", style='dar
 
         # Get time and data of trace
         time = np.linspace(0, tr.stats.delta * tr.stats.npts, tr.stats.npts)
-        if type == 'spfmx':
-            time = time - 1.79550004
+        # Apply the offset
+        time = time + meta.time_offset[type]
 
         data = amplitude * normalise(tr.data) # Normalised data
 
@@ -149,9 +156,9 @@ def plot_record(stream, meta, amplitude=10, orientation="HORIZONTAL", style='dar
         # loop required because of issues with Fig legend.
         if type == 'spfmx':
             if tr.stats.label=='APRIL17':
-                line_spfmx, = ax_r.plot(x, y, ':', color=c, linewidth=LW)
+                line_spfmx, = ax_r.plot(x, y, '-', color=c, linewidth=LW)
             else:
-                line_spfmx, = ax_r.plot(x, y, ':', color=c, linewidth=LW)
+                line_spfmx, = ax_r.plot(x, y, '-', color=c, linewidth=LW)
             spfmx_leg_ctr, leg_list, leg_names = _check_ctr(spfmx_leg_ctr, line_spfmx, "SPECFEM-X", leg_list, leg_names)
         elif type == 'yspec':
             line_yspec, = ax_r.plot(x, y, color=c, linewidth=LW)
@@ -179,7 +186,7 @@ def plot_record(stream, meta, amplitude=10, orientation="HORIZONTAL", style='dar
 
         y_low = np.amin(np.array(offsets)) - amplitude
         y_high = np.amax(np.array(offsets)) + amplitude
-        #ylabel = "Distance, Δ [degrees]"
+        label = "Distance, Δ [degrees]"
         ylabel = "Station Latitude [degrees]"
 
     fs = 12
@@ -282,4 +289,101 @@ def plot_spectra(st, station, meta, chls=["Z", "T", "P"], style='dark'):
         ax[k].set_xlim([meta.period_min-freqbuffer, meta.period_max+freqbuffer])
         ax[k].set_ylabel("Power")
 
-    return fig 
+    return fig
+
+
+
+def plot_synthetic_L2misfit(d, stn, label1, label2, meta, resample=None, mismax=None, normalise_seis=False):
+    fig, ax = plt.subplots(len(meta.plot_channels)+2, figsize=(12, 7.5), sharex=True)   # create figure.
+    fig.set_tight_layout(True)
+
+    maxvals = []
+    stndata = d.select(station=stn)
+
+    plt.suptitle(f"Station {stn}: Lat. = {stndata[0].stats.coordinates.latitude}, Lon. = {stndata[0].stats.coordinates.longitude}; {meta.fmin_mHz}-{meta.fmax_mHz} mHz")
+
+    # Initialise L2 misfit time-series
+    L2norm = np.zeros(len(stndata[0].data))
+
+    chlctr = 0
+    for chl in meta.plot_channels:
+        chldata  = stndata.select(channel=chl)
+
+        found1 = False
+        found2 = False
+        for i in chldata.traces:
+            if i.stats.label == label1:
+                l1 = i
+                found1 = True
+            elif i.stats.label == label2:
+                l2 = i
+                found2 = True
+
+        # Check both are found:
+        if np.logical_and(found1, found2):
+           # Found both
+            pass
+        else:
+            raise ValueError(f"Error: Found: Label {label1} {found1}  - Label {label2} {found2} ")
+
+        if resample!=None:
+            print(f'Resampling for L2 misfit: samprate {resample} s')
+            l1  = l1.resample(sampling_rate=resample)
+            l2  = l2.resample(sampling_rate=resample)
+
+        l1x, l1y = obspy_gen_mpl(l1)
+        l2x, l2y = obspy_gen_mpl(l2)
+
+        # Get shortest length
+        len1 = len(l1x)
+        len2 = len(l2x)
+        lmin = np.min([len1, len2])
+        #cutoff
+        l1x = l1x[:lmin]
+        l2x = l2x[:lmin]
+        l1y = l1y[:lmin]
+        l2y = l2y[:lmin]
+
+        if normalise_seis == True:
+            l1y = normalise(l1y)
+            l2y = normalise(l2y)
+
+        L2norm = L2norm[:lmin]
+
+        maxvals.append(np.amax([np.amax(np.abs(l1y)), np.amax(np.abs(l2y))]))
+
+        square_misfit = np.square(l2y - l1y)
+        L2norm += square_misfit
+
+
+        ax[chlctr].plot(l1x, l1y)
+        ax[chlctr].plot(l2x, l2y)
+        ax[chlctr].set_title(chl)
+
+        #ax[2].plot(l1x, square_misfit)
+
+        chlctr += 1
+
+
+    maxval = np.amax(np.abs(np.array(maxvals)))
+
+    L2norm = L2norm**0.5
+    ax[chlctr+1].plot(l1x, L2norm, 'k')
+    ax[chlctr].plot(l1x, L2norm/maxval * 100, 'k')
+
+
+    ax[chlctr+1].set_title('Root sum of squared misfits')
+    ax[chlctr].set_title('Normalised to maximum amplitude of seismogram')
+
+    ax[0].legend([label1, label2])
+
+
+    ax[-1].set_xlabel('Time [s]')
+    ax[-1].set_xlim([meta.tmin, meta.tmax])
+
+    if mismax !=None:
+        ax[-2].set_ylim([0, mismax])
+        ax[-1].set_ylim([0, mismax/100])
+
+
+    return fig

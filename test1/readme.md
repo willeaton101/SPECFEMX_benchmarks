@@ -24,7 +24,7 @@ Earth model:
 - No ellipticity (geoco = 1.0)
 
 Modes:
-- All modes within bandwidth
+- All modes within bandwidth  
 - 0.2 - 25 mHz (40 - 5000 seconds)
 - Results then filtered between 50-500 seconds
 
