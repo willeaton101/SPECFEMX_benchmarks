@@ -28,7 +28,7 @@ def process_raw_yspec(channels, master_dir, rename_raw=True, raw_folder="/raw/",
 
                 result = file.find('.', -4)                 # Find index of . in yspec file name
                 stn_number = int(file[result+1:])           # Get station number (to right of dot)
-                network = f"X{(stn_number-1)*10 + 1}"       # Convert station number to X format
+                network = f"X{(stn_number)*10 + 1}"       # Convert station number to X format
 
                 new_name = file[:result+1] + network        # Replace stn format with new X format
                 os.rename(raw_dir+file, raw_dir+new_name)   # Rename raw file
@@ -62,11 +62,11 @@ def process_raw_yspec(channels, master_dir, rename_raw=True, raw_folder="/raw/",
 
 
 if __name__ == "__main__":
-    process_raw_yspec(channels="ZNEG",
-                  master_dir="./debug_tohoku/initial_test1_copy/yspec/",
-                  rename_raw=True,
-                  raw_folder="/raw/",
-                  new_folder="/conv/",
-                  measure="D",
-                  hdur=60,
-                  keyword = 'PREMTEST')
+    process_raw_yspec(channels="ZTPG",
+                      master_dir="./PEGS/yspec/anelastic_iso2c/acc",
+                      rename_raw=True,
+                      raw_folder="/raw/",
+                      new_folder="/conv/",
+                      measure="A",
+                      hdur=70,
+                      keyword = 'T2')
