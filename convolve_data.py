@@ -9,18 +9,16 @@ import os
 import numpy as np
 from convolve_stf import gauss_STF_convolve
 
-master_dir = "./Tohoku_2011_benchmark/nmsyn"
+master_dir = "./PEGS/yspec/anelastic_iso2c/acc/"
 raw_dir = master_dir + "/raw/"
 
 
 
 # Identifier in file name that indicates this is a file we want to convolve - e.g for synthetics may want to use 'X'
-id = 'nmsyn'       #IU
-half_duration = 70 # use 60 for benchmarks tests
+id = 'Z'       #IU
+half_duration = 70 # use 60 for benchmarks tests // 70 for Tohoku
 
 conv_dir = master_dir + f"/conv/"
-
-
 
 if os.path.exists(conv_dir) == False:
     os.mkdir(conv_dir)

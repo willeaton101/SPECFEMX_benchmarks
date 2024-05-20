@@ -54,8 +54,9 @@ def slice_by_time(t, d, t_low, t_high):
 def normalise(x):
     return x/np.amax(np.abs(x))
 
-
-
+def normalise_after_time(t, x, min_time):
+    m = np.amax(np.abs(x[t>min_time]))
+    return x/m
 
 
 # Converts obspy trace into x and y for mpl plotting
@@ -453,7 +454,7 @@ def filter_timeseries(t, d, type, freq, zerophase, corners):
 
 
 # Converts obspy trace into x and y for mpl plotting
-def obspy_gen_mpl(tr, starttime=0):
+def obspy_gen_mpl_withtime(tr, starttime=0):
     x = np.linspace(0, tr.stats.npts*tr.stats.delta,  tr.stats.npts)
     y = tr.data
 

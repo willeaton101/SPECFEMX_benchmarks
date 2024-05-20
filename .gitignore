@@ -3,6 +3,7 @@
 *.sem.ascii
 *.DZ
 *.DP
+*.*yspec*.*.
 *.idea*
 *.ai
 *.DT
@@ -13,7 +14,7 @@ starttimeloop.txt
 timestamp*
 *.sac
 values_from_mesher.h
-
+*.X*.D*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -9,26 +9,29 @@ import numpy as np
 
 class PlotMetadata():
 
-    def __init__(self, chls, out_chls, rotate, geoco, fmin, fmax, ev_coords,colours, tmax, tmin=0, no_stns=17,
-                 t_offset_spfmx=0, t_offset_nmsyn=0, t_offset_axisem=0, t_offset_yspec=0, gravity_subtract=False,
-                 stn_file='Xstations', stn_list=[], network='Y5', attach_coords=True, measure='U', types=["axisem","yspec","nmsyn", "spfmx"]):
+    def __init__(self, chls, out_chls, fmin, fmax, ev_coords,tmax, colours={}, tmin=0, no_stns=17, rotate=False, geoco=1.0,
+                 t_offset_spfmx=0, t_offset_globe=0, t_offset_nmsyn=0, t_offset_axisem=0, t_offset_yspec=0,t_offset_qssp=0, gravity_subtract=False,
+                 stn_file='Xstations', stn_list=[], network='Y5', attach_coords=True, measure='U', t_offset_real=0,
+                 types=["axisem","yspec","nmsyn", "spfmx"], picks_file=None, corrections=None):
         # Simulation types:
         self.types = types
 
         # Data type: defaults to displacement
         self.measure = measure
 
+        self.corrections = corrections
+
+        if picks_file!=None:
+            import pickle
+            with open(picks_file, 'rb') as fp:
+                self.picks = pickle.load(fp)
+
 
         # Gravity info:
         self.gravity_subtract = gravity_subtract
 
         # Bandwidth info
-        self.fmin = fmin
-        self.fmax = fmax
-        self.fmin_mHz = fmin*1000
-        self.fmax_mHz = fmax*1000
-        self.period_max = 1/fmin
-        self.period_min = 1/fmax
+        self.set_freqlims(fmin, fmax)
 
         # Event info
         self.src_lat = ev_coords[0]
@@ -40,9 +43,13 @@ class PlotMetadata():
         self.tmin = tmin
         self.tmax = tmax
         self.time_offset = {"spfmx": t_offset_spfmx,
+                            "specfemx": t_offset_spfmx,
+                            "3Dglobe": t_offset_globe,
                             "nmsyn": t_offset_nmsyn,
                             "yspec": t_offset_yspec,
-                            "axisem": t_offset_axisem}
+                            "qssp": t_offset_qssp,
+                            "axisem": t_offset_axisem,
+                            "real": t_offset_real}
 
         # Plots
         self.colours = colours
@@ -80,9 +87,27 @@ class PlotMetadata():
                             "Z": r"Vertical (Z, $\mathbf{\hat{r}}$)",
                             "T": r"Theta (T, $\mathbf{\hat{\Theta}}$)",
                             "P": r"Phi (P, $\mathbf{\hat{\Phi}}$)",
-                            "G":  "Gravity (G)"
+                            "G":  "Gravity (G)",
+                            "ZC.PGRAV":        r"Z correction $\nabla \phi^{E1}$ OUTSIDE Earth ",
+                            "ZC.PGRAV_INSIDE": r"Z correction $\nabla \phi^{E1}$ INSIDE Earth  ",
+                            "ZC.GRAV": r"Z correction $- s \cdot$ $\nabla g$",
+                            "ZC.FA": r"Z Free air correction",
+                            "PEGS":' Pegs calculation',
+                            'GRAVIMETERZ': 'QSSP gravimeter',
+                            "ZC.CORIO": 'Vertical coriolis correction',
+                            "NC.CORIO": 'North coriolis correction',
+                            "EC.CORIO": 'East coriolis correction',
+                            "ZZ.STRAIN": 'Vertical Gravity Strain'
                             }
 
+
+    def set_freqlims(self, fmin, fmax):
+        self.fmin = fmin
+        self.fmax = fmax
+        self.fmin_mHz = fmin*1000
+        self.fmax_mHz = fmax*1000
+        self.period_max = 1/fmin
+        self.period_min = 1/fmax
 
     def gen_Xstn_list(self):
         stn_list = []
